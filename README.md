@@ -15,6 +15,7 @@ Measured progress, network traffic and approximate compute cost for an ongoing G
 | Import method | Signed-in Drive ZIP range reads, native uploader, one file at a time |
 | Native uploader | gotohp-cli v0.11.0, original quality, Pixel XL request profile |
 | Sampling | Every 120 seconds once telemetry was attached |
+| Source read window | Initially 4 MiB; changed to 16 MiB after bounded A/B testing |
 | Runtime libraries | Python 3.12, requests 2.34.2, fsspec 2026.9.0, aiohttp 3.14.5 |
 
 No filenames, Google account identifiers, credential material, server addresses, viewing keys, Drive links or private report rows are published here. Files in `data/` contain only allowlisted numeric measurements, timestamps and a state enum.
@@ -43,3 +44,9 @@ Quota-free Google storage treatment has not been independently verified. A Pixel
 - [Lightsail billing](https://aws.amazon.com/lightsail/faq/)
 - [gotohp source and authentication methods](https://github.com/xob0t/gotohp)
 - [Google Photos backup-quality policy](https://support.google.com/photos/answer/6220791)
+
+## Initial speed investigation
+
+The first workload showed source extraction around 0.25 MB/s while CPU and memory were idle. A bounded, sequential read-only test of the same archive read 16 MiB through fsspec in 13.381 seconds with 4 MiB windows, versus 2.663 seconds with a 16 MiB window. Plain HTTP ranged reads of 16 MiB reached about 6.25 MB/s. The AWS importer now uses 16 MiB windows to reduce request overhead. This is a source-read microbenchmark, not proof of a fivefold whole-run improvement.
+
+The restart preserved all confirmed identities and interrupted extraction only after checking that no native upload process was active. The unfinished source file was discarded and re-read. Larger windows can fetch unused bytes near skipped entries; the traffic ceiling remains enabled. Both before and after measurements remain in the dataset.

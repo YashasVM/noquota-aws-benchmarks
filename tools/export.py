@@ -56,7 +56,7 @@ def export(source, directory):
         if seconds > 0 and first[name] is not None and last[name] is not None and last[name] >= first[name]:
             summary[name.replace("_bytes", "_average_MBps")] = (last[name] - first[name]) / seconds / 1e6
     output = io.StringIO(newline="")
-    writer = csv.DictWriter(output, fieldnames=("observed_at", "state", *FIELDS))
+    writer = csv.DictWriter(output, fieldnames=("observed_at", "state", *FIELDS), lineterminator="\n")
     writer.writeheader()
     writer.writerows(samples)
     directory.mkdir(parents=True, exist_ok=True)
