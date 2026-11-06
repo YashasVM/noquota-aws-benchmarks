@@ -29,3 +29,14 @@ class ExportBenchmarkTests(unittest.TestCase):
                        {"confirmed": True}, {"confirmed": -1}):
             with self.subTest(change=change), self.assertRaises(ValueError):
                 public_sample({"observed_at": "2026-11-07T00:00:00Z", "state": "running", **change})
+
+    def test_stopped_job_is_not_labeled_in_progress(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / 'input.ndjson'
+            source.write_text(json.dumps(dict(observed_at='2026-11-07T00:00:00Z',
+                                              state='stopped', confirmed=48)) + '\n')
+            export(source, root / 'public')
+            summary = json.loads((root / 'public/summary.json').read_text())
+            self.assertEqual(summary['status'], 'stopped')
+            self.assertEqual(summary['latest_state'], 'stopped')

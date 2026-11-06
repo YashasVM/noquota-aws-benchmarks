@@ -1,0 +1,62 @@
+name: Refresh anonymous benchmarks
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17,47 * * * *'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: benchmark-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    if: github.repository == 'YashasVM/noquota-aws-benchmarks' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: main
+      - name: Select measurement branch
+        run: |
+          if git ls-remote --exit-code --heads origin automation/measurements > /dev/null; then
+            git fetch origin automation/measurements:refs/remotes/origin/automation/measurements
+            git switch -c automation/measurements --track origin/automation/measurements
+          else
+            git switch -c automation/measurements
+          fi
+      - name: Test publisher
+        run: python3 -m unittest discover -s tools -p 'test_*.py'
+      - name: Fetch validated numeric history
+        env:
+          NOQUOTA_VIEW_KEY: ${{ secrets.NOQUOTA_VIEW_KEY }}
+        run: |
+          test -z "$(git status --porcelain)"
+          python3 tools/fetch.py
+      - name: Commit measurement files only
+        run: |
+          git add -- data/samples.csv data/summary.json
+          python3 - <<'PY'
+          import subprocess
+          staged = set(subprocess.check_output(['git', 'diff', '--cached', '--name-only', '-z']).decode().rstrip('\0').split('\0')) - {''}
+          if not staged <= {'data/samples.csv', 'data/summary.json'}:
+              raise SystemExit('Unexpected staged changes; refusing publication')
+          PY
+          if git diff --cached --quiet; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Refresh anonymous import measurements'
+          git push origin HEAD:automation/measurements
+      - name: Open or reuse measurement PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if git diff --quiet origin/main...HEAD; then exit 0; fi
+          if [ "$(gh pr list --head automation/measurements --base main --state open --json number --jq length)" = 0 ]; then
+            gh pr create --draft --head automation/measurements --base main --title 'Refresh anonymous import measurements' --body 'Updates the two allowlisted numeric measurement files from the authenticated tracker. No automatic merge.'
+          fi
