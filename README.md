@@ -52,3 +52,21 @@ The first workload showed source extraction around 0.25 MB/s while CPU and memor
 The restart preserved all confirmed identities and interrupted extraction only after checking that no native upload process was active. The unfinished source file was discarded and re-read. Larger windows can fetch unused bytes near skipped entries; the traffic ceiling remains enabled. Both before and after measurements remain in the dataset.
 
 A further bounded test at separate, previously unread positions read 16 MiB in 5.785 seconds as one request, versus 4.563 seconds using four parallel requests. That smaller gain did not justify enabling four times as many range requests without a whole-job benchmark. No additional instance was provisioned.
+
+## Programmatic updates
+
+The AWS reporter samples every 120 seconds and updates the private dashboard without an LLM. The `Refresh anonymous benchmarks` GitHub Actions workflow runs at minutes 17 and 47 of each hour, or through **Run workflow**. Scheduled runs can be delayed by GitHub; the dataset timestamps show actual freshness.
+
+The repository needs the Actions secret `NOQUOTA_VIEW_KEY`. It is sent only as an HTTPS authorization header to the fixed tracker API. `python3 tools/fetch.py` reads that same environment variable for a manual refresh. No Google credentials, AWS credentials or tracker update key are needed by the publisher.
+
+The fetcher obtains the current job, validates and paginates its complete history, then uses the numeric allowlist exporter. A failed or invalid history response leaves the existing dataset unchanged. The workflow commits only `data/samples.csv` and `data/summary.json` on `automation/measurements` and opens or updates a draft PR. It rejects unexpected staged files and never commits to the default branch or merges. Earlier runs must be archived separately before switching the current dataset to a fresh instance.
+
+Run the publisher checks with `python3 -m unittest discover -s tools -p 'test_*.py'`. The workflow uses a SHA-pinned official checkout action and requests contents and pull-request write permission for measurement commits and the draft PR. Allow GitHub Actions to create pull requests in repository settings. The scheduled workflow becomes available after its setup PR is merged. See [GitHub's schedule documentation](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule) for schedule delays and automatic inactivity disabling.
+
+## Fresh instance continuation
+
+The first instance was stopped and later replaced at the user's request. Its [complete run-01 measurements](data/runs/run-01/samples.csv) and [final stopped summary](data/runs/run-01/summary.json) are retained. The old instance was deleted after verifying its private report and authenticated encrypted backup.
+
+The fresh instance resumes with 54 confirmed report identities. The latest `data/samples.csv` and `data/summary.json` contain only this new instance's observations. Confirmed media includes the preserved baseline; network counters and compute estimates belong to the new instance. Do not combine the two runs by subtracting their counters. Prior instance estimates remain in its archived summary. Source-read window remains 16 MiB.
+
+The private dashboard updates from the AWS reporter every 120 seconds and supports hover, touch and keyboard inspection of real rate intervals. After its setup PR is merged, benchmark refresh is programmatic through GitHub Actions; no recurring LLM monitor is required.

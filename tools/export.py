@@ -46,7 +46,7 @@ def export(source, directory):
     first, last = samples[0], samples[-1]
     seconds = (datetime.fromisoformat(last["observed_at"].replace("Z", "+00:00")) -
                datetime.fromisoformat(first["observed_at"].replace("Z", "+00:00"))).total_seconds()
-    summary = dict(status="in_progress" if last["state"] != "complete" else "complete",
+    summary = dict(status=last["state"] if last["state"] in ("complete", "stopped") else "in_progress",
                    latest_state=last["state"], observations=len(samples),
                    first_observed_at=first["observed_at"], last_observed_at=last["observed_at"],
                    measurement_window_seconds=seconds,
