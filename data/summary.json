@@ -1,30 +1,30 @@
 {
   "status": "stopped",
   "latest_state": "stopped",
-  "observations": 2677,
+  "observations": 3177,
   "first_observed_at": "2026-11-07T05:28:13.342000Z",
-  "last_observed_at": "2026-11-09T03:01:53.507000Z",
-  "measurement_window_seconds": 164020.165,
+  "last_observed_at": "2026-11-09T11:35:45.044000Z",
+  "measurement_window_seconds": 194851.702,
   "measurements": {
     "source_archives": 18,
     "indexed_archives": 18,
     "total_media": 28724,
-    "confirmed": 10371,
-    "resumed": 123633,
+    "confirmed": 15476,
+    "resumed": 161884,
     "failed": 0,
     "unknown": 0,
     "workers": 0,
     "staging_bytes": 2631482,
     "source_bytes": 903239751785,
     "total_media_bytes": 903292088583,
-    "confirmed_bytes": 135405773828,
-    "network_in_bytes": 171790898986,
-    "network_out_bytes": 54737946105,
-    "network_bytes": 226528845091,
-    "elapsed_seconds": 166638
+    "confirmed_bytes": 160444271070,
+    "network_in_bytes": 200366100331,
+    "network_out_bytes": 65097137687,
+    "network_bytes": 265463238018,
+    "elapsed_seconds": 197470
   },
   "quota_treatment": "unverified",
   "cost_basis": "approximate server compute; not billed cost",
-  "network_in_average_MBps": 1.047374059427388,
-  "network_out_average_MBps": 0.3337229649049554
+  "network_in_average_MBps": 1.0282982664888398,
+  "network_out_average_MBps": 0.33408221063421867
 }
